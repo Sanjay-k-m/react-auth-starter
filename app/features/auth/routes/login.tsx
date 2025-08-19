@@ -1,4 +1,4 @@
-// app/features/auth/routes/login.tsx
+// app/features/auth/login/index.tsx
 import { LoginForm } from "../components/login-form";
 
 export default function LoginPage() {
