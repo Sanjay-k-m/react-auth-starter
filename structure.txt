@@ -1,0 +1,95 @@
+└── 📁app/
+    ├── 📁assets/
+    │   ├── logo-dark.svg
+    │   └── logo-light.svg
+    │
+    ├── 📁components/
+    │   ├── 📁layout/
+    │   │   ├── Layout.tsx
+    │   │   ├── Header.tsx
+    │   │   ├── Sidebar.tsx
+    │   │   └── index.ts
+    │   ├── 📁ui/
+    │   │   ├── button.tsx
+    │   │   ├── form.tsx
+    │   │   ├── input.tsx
+    │   │   ├── label.tsx
+    │   │   └── index.ts
+    │   ├── 📁common/
+    │   │   ├── LoadingSpinner.tsx
+    │   │   ├── ConfirmationModal.tsx
+    │   │   └── index.ts
+    │   ├── ErrorBoundary.tsx
+    │   └── index.ts
+    │
+    ├── 📁features/
+    │   └── 📁auth/
+    │       ├── 📁components/
+    │       │   ├── LoginForm.tsx
+    │       │   ├── RegisterForm.tsx
+    │       │   ├── ProtectedRoute.tsx
+    │       │   └── index.ts
+    │       ├── 📁hooks/
+    │       │   ├── use-auth.ts
+    │       │   ├── use-login.ts
+    │       │   └── index.ts
+    │       ├── 📁services/
+    │       │   ├── auth.service.ts
+    │       │   └── index.ts
+    │       ├── 📁types/
+    │       │   ├── auth.types.ts
+    │       │   └── index.ts
+    │       ├── 📁schemas/
+    │       │   ├── auth.schemas.ts
+    │       │   └── index.ts
+    │       └── index.ts
+    │
+    ├── 📁hooks/
+    │   ├── use-local-storage.ts
+    │   ├── use-debounce.ts
+    │   └── index.ts
+    │
+    ├── 📁lib/
+    │   ├── utils.ts
+    │   ├── queryClient.ts          # Move here from auth
+    │   ├── api.ts
+    │   ├── validations.ts
+    │   ├── constants.ts
+    │   └── index.ts
+    │
+    ├── 📁routes/                   # React Router v7 file-based routing
+    │   ├── _layout.tsx            # Layout wrapper
+    │   ├── _index.tsx             # Home page (/)
+    │   ├── about.tsx              # About page (/about)
+    │   ├── login.tsx              # Login page (/login)
+    │   ├── register.tsx           # Register page (/register)
+    │   └── 📁dashboard/
+    │       ├── _layout.tsx        # Dashboard layout
+    │       ├── _index.tsx         # Dashboard home
+    │       ├── profile.tsx        # Dashboard profile
+    │       └── settings.tsx       # Dashboard settings
+    │
+    ├── 📁services/
+    │   ├── 📁api/
+    │   │   ├── base.service.ts
+    │   │   ├── auth.service.ts
+    │   │   └── users.service.ts
+    │   └── index.ts
+    │
+    ├── 📁stores/                  # State management
+    │   ├── auth.store.ts
+    │   ├── ui.store.ts
+    │   └── index.ts
+    │
+    ├── 📁types/                   # Global TypeScript types
+    │   ├── api.types.ts
+    │   ├── common.types.ts
+    │   └── index.ts
+    │
+    ├── 📁schemas/                 # Global Zod schemas
+    │   ├── common.schemas.ts
+    │   └── index.ts
+    │
+    ├── app.css
+    ├── root.tsx
+    └── routes.ts
