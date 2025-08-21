@@ -1,0 +1,26 @@
+{
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+        "typescriptreact"
+    ],
+    "eslint.nodePath": "./node_modules/.pnpm/eslint@9.33.0/node_modules",
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ],
+    "prettier.requireConfig": true,
+    "prettier.pluginSearchDirs": [
+        "node_modules"
+    ],
+    "tailwindCSS.includeLanguages": {
+        "typescript": "javascript"
+    },
+    "files.eol": "\n",
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    }
+}

@@ -5,6 +5,8 @@ import { queryClient } from "~/lib/queryClient";
 import { Layout } from "~/components/layout/Layout";
 import "./app.css";
 import type { Route } from "./+types/root";
+import { StrictMode } from "react";
+import { Toaster } from "./components/ui/sonner";
 
 
 
@@ -23,17 +25,20 @@ export const links = () => [
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Layout>
-        <Outlet />
-      </Layout>
-    </QueryClientProvider>
+    < StrictMode >
+      <QueryClientProvider client={queryClient}>
+        <Layout>
+          <Outlet />
+          <Toaster position="bottom-right"/>
+        </Layout>
+      </QueryClientProvider>
+    </StrictMode >
   );
 }
 
 
 
-export  function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
