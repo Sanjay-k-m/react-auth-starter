@@ -1,8 +1,8 @@
 export const AUTH_ROUTES = {
   login: '/',
-  logout: '/auth/logout',
-  signup: '/auth/signup',
-  signupVerifyOtp: (email: string) => `/auth/otp/verify/${email}`,
-  passwordReset: '/auth/reset-password',
+  signup: '/auth/sign-up',
+  signupVerifyOtp: (email: string) => `/auth/sign-up/verify/${email}`,
   forgotPassword: '/auth/forgot-password',
+  resetPassword: `/auth/reset-password`,
+  logout: '/auth/logout',
 };

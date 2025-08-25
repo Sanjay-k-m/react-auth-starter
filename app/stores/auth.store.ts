@@ -1,40 +1,114 @@
 import { create } from 'zustand';
 import { authService } from '../services/auth.service';
-import type {
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-  ResetPasswordResponse,
-  User,
-} from '~/types/auth.types';
 import { tokenStorage } from '~/lib/api';
+import type {
+  LoginRequest,
+  RegisterInitiateRequest,
+  RegisterConfirmRequest,
+  ForgotPasswordConfirmRequest,
+  ForgotPasswordInitiateRequest,
+} from '~/types/auth/request.types';
+import type {
+  RegisterConfirmationResponse,
+  ForgotPasswordInitiationResponse,
+  ForgotPasswordConfirmationResponse,
+} from '~/types/auth/response.types';
+import type { BasicResponse } from '~/types/types';
+import { isBasicErrorResponse } from '~/lib/utils/errorGuards';
 
 interface AuthState {
-  user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (payload: LoginRequest) => Promise<BasicResponse>;
+  registerInitiate: (payload: RegisterInitiateRequest) => Promise<BasicResponse>;
+  registerConfirm: (payload: RegisterConfirmRequest) => Promise<RegisterConfirmationResponse>;
+  refreshTokens: () => Promise<void>;
   logout: () => Promise<void>;
-  refresh: () => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  verifyOtp: (email: string, otp: string) => Promise<void>;
-  forgotPassword: (payload: ForgotPasswordRequest) => Promise<void>;
-  resetPassword: (payload: ResetPasswordRequest) => Promise<ResetPasswordResponse>;
+  forgotPasswordInitiate: (
+    payload: ForgotPasswordInitiateRequest,
+  ) => Promise<ForgotPasswordInitiationResponse>;
+  forgotPasswordConfirm: (
+    payload: ForgotPasswordConfirmRequest,
+  ) => Promise<ForgotPasswordConfirmationResponse>;
 }
 
+// Type guard for BasicErrorResponse
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
   isAuthenticated: tokenStorage.hasValidTokens(),
 
-  login: async (email: string, password: string) => {
-    const response = await authService.login({ email, password });
+  login: async (payload) => {
+    try {
+      const response = await authService.login(payload);
 
-    // response is LoginResponse (flat)
-    tokenStorage.setAccessToken(response.access_token);
-    tokenStorage.setRefreshToken(response.refresh_token);
+      if (response.status === 'success' && response.data) {
+        const { accessToken, refreshToken } = response.data.tokens;
 
-    set({
-      user: response.user ?? null, // user is present on login
-      isAuthenticated: true,
-    });
+        await tokenStorage.setAccessToken(accessToken);
+        await tokenStorage.setRefreshToken(refreshToken);
+
+        set({ isAuthenticated: true });
+      }
+
+      return { status: response.status, message: response.message };
+    } catch (error: unknown) {
+      if (isBasicErrorResponse(error)) {
+        throw error;
+      }
+      throw new Error('Login failed. Please try again.');
+    }
+  },
+
+  registerInitiate: async (payload) => {
+    try {
+      const response = await authService.registerInitiate(payload);
+      return { status: response.status, message: response.message };
+    } catch (error: unknown) {
+      if (isBasicErrorResponse(error)) throw error;
+      throw new Error('Registration failed. Please try again.');
+    }
+  },
+
+  registerConfirm: async (payload) => {
+    try {
+      const response = await authService.registerConfirm(payload);
+
+      if (response.status === 'success' && response.data?.tokens) {
+        const { accessToken, refreshToken } = response.data.tokens;
+        await tokenStorage.setAccessToken(accessToken);
+        await tokenStorage.setRefreshToken(refreshToken);
+        set({ isAuthenticated: true });
+      }
+
+      return response;
+    } catch (error: unknown) {
+      if (isBasicErrorResponse(error)) throw error;
+      throw new Error('Registration confirmation failed. Please try again.');
+    }
+  },
+
+  refreshTokens: async () => {
+    const refreshToken = tokenStorage.getRefreshToken();
+
+    if (!refreshToken) {
+      set({ isAuthenticated: false });
+      throw new Error('No refresh token available.');
+    }
+
+    try {
+      const response = await authService.refreshTokens({ refreshToken });
+
+      if (response.status === 'success' && response.data?.tokens) {
+        const { accessToken, refreshToken: newRefresh } = response.data.tokens;
+        await tokenStorage.setAccessToken(accessToken);
+        await tokenStorage.setRefreshToken(newRefresh);
+        set({ isAuthenticated: true });
+      }
+    } catch (error: unknown) {
+      tokenStorage.clearTokens();
+      set({ isAuthenticated: false });
+      if (isBasicErrorResponse(error)) throw error;
+      throw new Error('Failed to refresh tokens.');
+    }
   },
 
   logout: async () => {
@@ -42,51 +116,25 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authService.logout();
     } finally {
       tokenStorage.clearTokens();
-      set({ user: null, isAuthenticated: false });
+      set({ isAuthenticated: false });
     }
   },
 
-  refresh: async () => {
-    const refreshToken = tokenStorage.getRefreshToken();
-    if (refreshToken) {
-      const response = await authService.refreshToken(refreshToken);
-
-      // refresh endpoint likely returns only tokens
-      tokenStorage.setAccessToken(response.access_token);
-      tokenStorage.setRefreshToken(response.refresh_token);
-
-      set({ isAuthenticated: true });
-    } else {
-      set({ user: null, isAuthenticated: false });
+  forgotPasswordInitiate: async (payload) => {
+    try {
+      return await authService.forgotPasswordInitiate(payload);
+    } catch (error: unknown) {
+      if (isBasicErrorResponse(error)) throw error;
+      throw new Error('Failed to send password reset email. Please try again.');
     }
   },
-  signup: async (email: string, password: string) => {
-    const response = await authService.register({ email, password });
-    // backend may not set tokens until OTP is verified
-    set({
-      user: response.user ?? null,
-      isAuthenticated: false, // not fully logged in yet
-    });
-  },
 
-  verifyOtp: async (email: string, otp: string) => {
-    const response = await authService.verifyOtp({ email, otp });
-
-    // // after OTP, request tokens
-    // const response = await authService.login({ email, password: "???" });
-    // depends on backend – sometimes OTP itself returns tokens
-    tokenStorage.setAccessToken(response.data.access_token);
-    tokenStorage.setRefreshToken(response.data.refresh_token);
-
-    set({
-      user: response.user ?? null,
-      isAuthenticated: true,
-    });
-  },
-  forgotPassword: async (payload: ForgotPasswordRequest) => {
-    await authService.forgotPassword(payload);
-  },
-  resetPassword: async (payload: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
-    return await authService.resetPassword(payload);
+  forgotPasswordConfirm: async (payload) => {
+    try {
+      return await authService.forgotPasswordConfirm(payload);
+    } catch (error: unknown) {
+      if (isBasicErrorResponse(error)) throw error;
+      throw new Error('Failed to reset password. Please try again.');
+    }
   },
 }));

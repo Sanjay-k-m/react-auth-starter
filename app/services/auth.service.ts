@@ -1,85 +1,111 @@
-import apiWithAuth, { getApiErrorMessage } from '~/lib/api';
+import { AxiosError } from 'axios';
+import apiWithAuth from '~/lib/api';
 import type {
-  ForgotPasswordRequest,
+  ForgotPasswordConfirmRequest,
+  ForgotPasswordInitiateRequest,
   LoginRequest,
+  RefreshTokenRequest,
+  RegisterInitiateRequest,
+  RegisterConfirmRequest,
+} from '~/types/auth/request.types';
+import type {
+  ForgotPasswordConfirmationResponse,
+  ForgotPasswordInitiationResponse,
   LoginResponse,
   RefreshTokenResponse,
-  RegisterRequest,
-  RegisterResponse,
-  ResetPasswordRequest,
-  ResetPasswordResponse,
-  User,
-} from '~/types/auth.types';
+  RegisterConfirmationResponse,
+  RegisterInitiationResponse,
+} from '~/types/auth/response.types';
+import type { BasicResponse } from '~/types/types';
 
-export const authService = {
-  login: async (data: LoginRequest): Promise<LoginResponse> => {
+export interface AuthService {
+  login(data: LoginRequest): Promise<LoginResponse>;
+  registerInitiate(data: RegisterInitiateRequest): Promise<RegisterInitiationResponse>;
+  registerConfirm(data: RegisterConfirmRequest): Promise<RegisterConfirmationResponse>;
+  refreshTokens(data: RefreshTokenRequest): Promise<RefreshTokenResponse>;
+  logout(): Promise<BasicResponse>;
+  forgotPasswordInitiate(
+    data: ForgotPasswordInitiateRequest,
+  ): Promise<ForgotPasswordInitiationResponse>;
+  forgotPasswordConfirm(
+    data: ForgotPasswordConfirmRequest,
+  ): Promise<ForgotPasswordConfirmationResponse>;
+}
+
+export const authService: AuthService = {
+  login: async (data) => {
     try {
       const response = await apiWithAuth.post<LoginResponse>('/auth/login', data);
       return response.data;
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
     }
   },
-
-  register: async (data: RegisterRequest): Promise<RegisterResponse> => {
+  registerInitiate: async (data) => {
     try {
-      const response = await apiWithAuth.post<RegisterResponse>('/auth/register-request', data);
-      return response.data; // likely includes user + maybe needs OTP verification
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
-    }
-  },
-
-  verifyOtp: async (data: { email: string; otp: string }): Promise<any> => {
-    try {
-      return await apiWithAuth.post('/auth/register-verify', data);
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
-    }
-  },
-
-  refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
-    try {
-      // ✅ backend expects snake_case key
-      const response = await apiWithAuth.post<RefreshTokenResponse>('/auth/refresh', {
-        refresh_token: refreshToken,
-      });
+      const response = await apiWithAuth.post<RegisterInitiationResponse>(
+        '/auth/register/initiate',
+        data,
+      );
       return response.data;
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
     }
   },
-
-  logout: async (): Promise<void> => {
+  registerConfirm: async (data) => {
     try {
-      await apiWithAuth.post('/auth/logout');
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
-    }
-  },
-
-  getCurrentUser: async (): Promise<User> => {
-    try {
-      const response = await apiWithAuth.get<User>('/auth/me');
+      const response = await apiWithAuth.post<RegisterConfirmationResponse>(
+        '/auth/register/confirm',
+        data,
+      );
       return response.data;
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
     }
   },
-
-  forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
+  refreshTokens: async (data) => {
     try {
-      await apiWithAuth.post<void>('/auth/request-password-reset', data);
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
+      const response = await apiWithAuth.post<RefreshTokenResponse>('/auth/token/refresh', data);
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
     }
   },
-  resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
+  logout: async () => {
     try {
-      const response = apiWithAuth.post<ResetPasswordResponse>('/auth/reset-password', data);
-      return (await response).data
-    } catch (error) {
-      throw new Error(await getApiErrorMessage(error));
+      const response = await apiWithAuth.post<BasicResponse>('/auth/logout');
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
+    }
+  },
+  forgotPasswordInitiate: async (data) => {
+    try {
+      const response = await apiWithAuth.post<ForgotPasswordInitiationResponse>(
+        '/auth/forgot-password/initiate',
+        data,
+      );
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
+    }
+  },
+  forgotPasswordConfirm: async (data) => {
+    try {
+      const response = await apiWithAuth.post<ForgotPasswordConfirmationResponse>(
+        '/auth/forgot-password/confirm',
+        data,
+      );
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) throw error.response?.data;
+      throw new Error('Unexpected error occurred');
     }
   },
 };

@@ -1,4 +1,5 @@
 // components/Layout.tsx
+import React from "react";
 
 import type { FC, ReactNode } from "react";
 import { Links, Meta, Scripts, ScrollRestoration } from "react-router";

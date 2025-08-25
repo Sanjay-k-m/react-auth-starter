@@ -8,7 +8,6 @@ export const loginSchema = z.object({
 export const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  name: z.string().optional(),
 });
 
 // OTP schema
@@ -28,7 +27,7 @@ export const updatePasswordSchema = z
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'], // shows error on confirmPassword field
+    path: ['confirmPassword'],
   });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
